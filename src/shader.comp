@@ -1,0 +1,58 @@
+#version 450
+
+layout(local_size_x = 32, local_size_y = 32, local_size_z = 1) in;
+
+struct Tri {
+    vec3 v1;
+    vec3 v2;
+    vec3 v3;
+
+    vec3 normal;
+};
+
+layout(binding = 0) uniform UniformBufferObject {
+    uvec2 size;
+    int inp[ ];
+};
+layout(std430, binding = 1) buffer OutSSBO {
+    vec4 pixels[ ];
+};
+
+dvec2 square_complex(dvec2 x) {
+    return dvec2(x.x*x.x-x.y*x.y, x.x*x.y*2);
+}
+
+dvec2 get_cam(dvec2 uv, dvec2 center, double zoom) {
+    dvec2 tl = dvec2((-zoom/2)*size.x/size.y, -zoom/2)+center;
+    dvec2 br = dvec2((zoom/2)*size.x/size.y, zoom/2)+center;
+    return uv * (br - tl) + tl;
+}
+
+void main() {
+    if (gl_GlobalInvocationID.x >= size.x || gl_GlobalInvocationID.y >= size.y) {
+        return;
+    };
+    // dvec2 tl = dvec2(-1.5*size.x/size.y, -1.5);
+    // dvec2 br = dvec2(1.5*size.x/size.y, 1.5);
+    dvec2 uv = dvec2(gl_GlobalInvocationID.xy)/dvec2(size);
+    dvec2 uv_scaled = get_cam(uv, dvec2(-1.768800555, -0.001768198), 0.000001);
+    uint index = gl_GlobalInvocationID.x + gl_GlobalInvocationID.y*size.x;
+    if (index >= 1920*9*1200) {
+        pixels[0] = vec4(0.0, 1.0, 1.0, 1.0);
+        return;
+    }
+    // if (length(uv_scaled)<1) {
+    //     pixels[index] = vec4(0.0, 0.0, 0.0, 1.0);
+    // }
+    dvec2 z = dvec2(0);
+    uint i = 0;
+    while (length(z) < 2.0 && i < 1024) {
+        z = square_complex(z) + uv_scaled;
+        i++;
+    };
+    if (i==1024) {
+        pixels[index] = vec4(0.0, 0.0, 0.0, 1.0);
+    } else {
+        pixels[index] = vec4(float(i)/1024, 0.0, 0.0, 1.0);
+    };
+}
