@@ -11,11 +11,12 @@ struct Tri {
 };
 
 layout(binding = 0) uniform UniformBufferObject {
-    uvec2 size;
+    uvec4 size;
+    dvec4 pos;
     int inp[ ];
 };
 layout(std430, binding = 1) buffer OutSSBO {
-    vec4 pixels[ ];
+    uint pixels[ ];
 };
 
 dvec2 square_complex(dvec2 x) {
@@ -27,6 +28,11 @@ dvec2 get_cam(dvec2 uv, dvec2 center, double zoom) {
     dvec2 br = dvec2((zoom/2)*size.x/size.y, zoom/2)+center;
     return uv * (br - tl) + tl;
 }
+void write_pixel(uint index, vec4 col) {
+    uvec4 col8 = uvec4(col * 255);
+    uint color = col8.w * 256*256*256 + col8.z * 256*256 + col8.y * 256 + col8.x;
+    pixels[index] = color;
+}
 
 void main() {
     if (gl_GlobalInvocationID.x >= size.x || gl_GlobalInvocationID.y >= size.y) {
@@ -35,12 +41,11 @@ void main() {
     // dvec2 tl = dvec2(-1.5*size.x/size.y, -1.5);
     // dvec2 br = dvec2(1.5*size.x/size.y, 1.5);
     dvec2 uv = dvec2(gl_GlobalInvocationID.xy)/dvec2(size);
-    dvec2 uv_scaled = get_cam(uv, dvec2(-1.768800555, -0.001768198), 0.000001);
+    double zoom = pos.z;
+    double gamma = pos.w;
+    dvec2 uv_scaled = get_cam(uv, pos.xy, zoom);
+    // dvec2(-1.768800555, -0.001768198), 0.000001
     uint index = gl_GlobalInvocationID.x + gl_GlobalInvocationID.y*size.x;
-    if (index >= 1920*9*1200) {
-        pixels[0] = vec4(0.0, 1.0, 1.0, 1.0);
-        return;
-    }
     // if (length(uv_scaled)<1) {
     //     pixels[index] = vec4(0.0, 0.0, 0.0, 1.0);
     // }
@@ -51,8 +56,10 @@ void main() {
         i++;
     };
     if (i==1024) {
-        pixels[index] = vec4(0.0, 0.0, 0.0, 1.0);
+        write_pixel(index, vec4(0.0, 0.0, 0.0, 1.0));
     } else {
-        pixels[index] = vec4(float(i)/1024, 0.0, 0.0, 1.0);
+        write_pixel(index, vec4(pow(float(i)/1024, float(gamma)), 0.0, 0.0, 1.0));
     };
+    // write_pixel(index, vec4(0.0, 0.0, 0.0, 1.0));
+    // pixels[index] = vec4(pos);
 }
