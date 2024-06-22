@@ -1,6 +1,6 @@
 use std::{marker::PhantomData, mem::size_of, ptr::slice_from_raw_parts_mut};
 
-use ash::vk::{self, Buffer, BufferCreateFlags, BufferUsageFlags, DeviceMemory, MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags, MemoryRequirements, SharingMode, StructureType};
+use ash::vk::{self, Buffer, BufferUsageFlags, DeviceMemory, MemoryAllocateInfo, MemoryMapFlags, MemoryPropertyFlags, MemoryRequirements, SharingMode, StructureType};
 
 use super::{LogicalDevice, PhysicalDevice};
 

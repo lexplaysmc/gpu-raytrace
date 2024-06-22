@@ -1,8 +1,8 @@
-use std::{mem::size_of, ptr::slice_from_raw_parts, sync::{self, Mutex}, thread};
+use std::{mem::size_of, ptr::slice_from_raw_parts, sync, thread};
 
-use ash::vk::{self, AccessFlags, BufferCopy, BufferMemoryBarrier, CommandBufferBeginInfo, CommandBufferResetFlags, DependencyFlags, Fence, FenceCreateInfo, PipelineBindPoint, PipelineStageFlags, StructureType, SubmitInfo, WHOLE_SIZE};
+use ash::vk::{BufferCopy, CommandBufferBeginInfo, CommandBufferResetFlags, FenceCreateInfo, PipelineBindPoint, StructureType, SubmitInfo};
 use image::Rgba;
-use vulkan::device::{buffer::{StagedSSBO, StagedUBO}, shaders::Pipeline, LogicalDevice};
+use vulkan::device::buffer::{StagedSSBO, StagedUBO};
 
 pub mod vulkan;
 
@@ -137,11 +137,6 @@ fn main() {
     unsafe { logical.device.destroy_fence(fence, None) };
     drop(send);
     thread.join().unwrap();
-}
-
-
-fn render_frame(logical: &LogicalDevice, pipe: &Pipeline) {
-
 }
 
 fn lerp(start: f64, end: f64, t: f64) -> f64 {

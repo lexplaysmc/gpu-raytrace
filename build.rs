@@ -28,4 +28,5 @@ fn main() {
     // Re-run build script if specific files change
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=src\\shader.comp");
+    println!("cargo:rerun-if-changed=src\\shader.spv");
 }
