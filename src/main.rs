@@ -1,4 +1,4 @@
-use std::{fs::File, io::Write, ptr::slice_from_raw_parts};
+use std::ptr::slice_from_raw_parts;
 
 use ash::vk::{BufferCopy, CommandBufferBeginInfo, CommandBufferResetFlags, FenceCreateInfo, PipelineBindPoint, StructureType, SubmitInfo};
 use image::Rgba;
@@ -7,8 +7,8 @@ use vulkan::device::buffer::{StagedSSBO, StagedUBO};
 
 pub mod vulkan;
 
-const WIDTH: usize = 1920;
-const HEIGHT: usize = 1200;
+const WIDTH: usize = 1920/4;
+const HEIGHT: usize = 1200/4;
 
 #[repr(C)]
 struct UBOData {
@@ -21,7 +21,7 @@ impl<'a> UBOData {
         Self { size: [size[0] as u32, size[1] as u32, count as u32, seed], spheres, cam: [lookfrom[0], lookfrom[1], lookfrom[2], vfov.to_radians(), lookat[0], lookat[1], lookat[2], 0.0]}
     }
     fn vec(&self) -> Vec<u8> {
-        let mut vec = unsafe { &*slice_from_raw_parts(self as *const Self as *const u8, 16) }.to_vec();
+        let mut vec = unsafe { &*slice_from_raw_parts(self as *const Self as *const u8, 16+32) }.to_vec();
         vec.extend_from_slice(unsafe { &*slice_from_raw_parts(self.spheres.as_ptr() as *const u8, 4*self.spheres.len()) });
         vec
     }
@@ -35,8 +35,8 @@ fn main() {
 
     let mut dat = vec![0.0, 0.0, -1.0, 0.5, 0.0, -100.5, -1.0, 100.0, -1.0, 0.0, -1.0, 0.5, 1.0, 0.0, -1.0, 0.5];
     dat.resize(64*4, 0.0);
-    dat.extend_from_slice(&[0.1, 0.2, 0.5, f32::INFINITY, 0.8, 0.8, 0.0, f32::INFINITY, 1.5, f32::INFINITY, f32::INFINITY, f32::INFINITY, 0.8, 0.6, 0.2, 1.0]);
-    let mut ubodata = UBOData::new([WIDTH, HEIGHT], dat, 4, rand::thread_rng().next_u32(), 30.0, [0.0, 0.0, 0.0], [0.0, 0.0, -1.0]);
+    dat.extend_from_slice(&[0.9, 0.9, 0.9, -f32::INFINITY, 0.8, 0.8, 0.0, f32::INFINITY, 1.5, f32::INFINITY, f32::INFINITY, f32::INFINITY, 0.8, 0.6, 0.2, 0.0]);
+    let mut ubodata = UBOData::new([WIDTH, HEIGHT], dat, 4, rand::thread_rng().next_u32(), 90.0, [0.0, 0.0, 0.0], [0.0, 0.0, -1.0]);
 
     let mut ubo = StagedUBO::new(&logical, ubodata.vec());
     let mut ssbo = StagedSSBO::<f32>::new(&logical, WIDTH * HEIGHT * 4);
@@ -52,7 +52,7 @@ fn main() {
     };
     let fence = unsafe { logical.device.create_fence(&fence, None) }.unwrap();
     
-    let samples = 50;
+    let samples = 100;
     for x in 0usize..samples {
         ubodata.size[3] = rand::thread_rng().next_u32();
         ubo.get_slice().copy_from_slice(&ubodata.vec());
