@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 ash = "0.38.0"
 image = "0.25.1"
+rand = "0.8.5"
