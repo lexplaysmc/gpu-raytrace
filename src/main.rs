@@ -6,9 +6,10 @@ use rand::RngCore;
 use vulkan::device::buffer::{StagedSSBO, StagedUBO};
 
 pub mod vulkan;
+mod obj;
 
-const WIDTH: usize = 1920/4;
-const HEIGHT: usize = 1200/4;
+const WIDTH: usize = 1920;
+const HEIGHT: usize = 1200;
 
 #[repr(C)]
 struct UBOData {
@@ -33,10 +34,10 @@ fn main() {
     let logical = vulkan::device::LogicalDevice::create_logical_device(physical);
     let queue = logical.create_queue();
 
-    let mut dat = vec![0.0, 0.0, -1.0, 0.5, 0.0, -100.5, -1.0, 100.0, -1.0, 0.0, -1.0, 0.5, 1.0, 0.0, -1.0, 0.5];
+    let mut dat = vec![0.0, 0.0, -1.0, 0.5, 0.0, -1000.5, -1.0, 1000.0, -1.0, 0.0, -1.0, 0.5, 1.0, 0.0, -1.0, 0.5];
     dat.resize(64*4, 0.0);
-    dat.extend_from_slice(&[0.9, 0.9, 0.9, -f32::INFINITY, 0.8, 0.8, 0.0, f32::INFINITY, 1.5, f32::INFINITY, f32::INFINITY, f32::INFINITY, 0.8, 0.6, 0.2, 0.0]);
-    let mut ubodata = UBOData::new([WIDTH, HEIGHT], dat, 4, rand::thread_rng().next_u32(), 90.0, [0.0, 0.0, 0.0], [0.0, 0.0, -1.0]);
+    dat.extend_from_slice(&[0.1, 0.2, 0.5, f32::INFINITY, 0.8, 0.8, 0.0, f32::INFINITY, 1.5, f32::INFINITY, f32::INFINITY, f32::INFINITY, 1.0, 1.0, 1.0, 0.0]);
+    let mut ubodata = UBOData::new([WIDTH, HEIGHT], dat, 4, rand::thread_rng().next_u32(), 30.0, [-3.0, 2.0, 1.0], [0.0, 0.0, -1.0]);
 
     let mut ubo = StagedUBO::new(&logical, ubodata.vec());
     let mut ssbo = StagedSSBO::<f32>::new(&logical, WIDTH * HEIGHT * 4);
@@ -88,30 +89,6 @@ fn main() {
         unsafe { logical.device.queue_wait_idle(queue.queue) }.unwrap();
         unsafe { logical.device.reset_command_buffer(cmd, CommandBufferResetFlags::default()) }.unwrap();
 
-        // unsafe { logical.device.begin_command_buffer(cmd, &info) }.unwrap();
-        // unsafe { logical.device.cmd_pipeline_barrier(cmd, PipelineStageFlags::COMPUTE_SHADER, PipelineStageFlags::TRANSFER, DependencyFlags::empty(), &[], &[BufferMemoryBarrier {
-        //     s_type: StructureType::BUFFER_MEMORY_BARRIER,
-        //     src_access_mask: AccessFlags::SHADER_WRITE,
-        //     dst_access_mask: AccessFlags::TRANSFER_READ,
-        //     src_queue_family_index: vk::QUEUE_FAMILY_IGNORED,
-        //     dst_queue_family_index: vk::QUEUE_FAMILY_IGNORED,
-        //     buffer: ssbo.get_ssbo(),
-        //     offset: 0,
-        //     size: WHOLE_SIZE,
-        //     ..Default::default()
-        // }], &[]) }
-        // unsafe { logical.device.end_command_buffer(cmd) }.unwrap();
-        // unsafe { logical.device.queue_submit(queue.queue, &[SubmitInfo{
-        //     s_type: StructureType::SUBMIT_INFO,
-        //     command_buffer_count: 1,
-        //     p_command_buffers: &cmd,
-        //     ..Default::default()
-        // }], fence) }.unwrap();
-        // unsafe { logical.device.wait_for_fences(&[fence], true, u64::MAX) }.unwrap();
-        // unsafe { logical.device.reset_fences(&[fence]) }.unwrap();
-        // unsafe { logical.device.queue_wait_idle(queue.queue) }.unwrap();
-        // unsafe { logical.device.reset_command_buffer(cmd, CommandBufferResetFlags::default()) }.unwrap();
-
         unsafe { logical.device.begin_command_buffer(cmd, &info) }.unwrap();
         unsafe { logical.device.cmd_copy_buffer(cmd, ssbo.get_ssbo(), ssbo.get_stage(), &[BufferCopy { src_offset: 0, dst_offset: 0, size: ssbo.get_size() as u64 }]) }
         unsafe { logical.device.end_command_buffer(cmd) }.unwrap();
@@ -124,8 +101,8 @@ fn main() {
         unsafe { logical.device.wait_for_fences(&[fence], true, u64::MAX) }.unwrap();
         unsafe { logical.device.reset_fences(&[fence]) }.unwrap();
         unsafe { logical.device.queue_wait_idle(queue.queue) }.unwrap();
-        if x%10 == 0 {
-            println!("{x}");
+        if (x+1)%10 == 0 {
+            println!("{}", x+1);
         }
     }
     println!("{:?}", &ssbo.get_slice()[0..20]);
